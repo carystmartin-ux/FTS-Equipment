@@ -369,17 +369,25 @@ var EQUIPMENT_DATA = [{"id":"celestron-digital-microscope","name":"Celestron Dig
     return;
   }
 
-  var eq = null;
-  for (var i = 0; i < EQUIPMENT_DATA.length; i++) {
-    if (EQUIPMENT_DATA[i].id === equipId) { eq = EQUIPMENT_DATA[i]; break; }
-  }
+  var url = "https://script.google.com/macros/s/AKfycbx965JNKa5G69NW0zf0dnNmSK5BolW3rjffMD0sRCNgdNuaXnap9PglgrsiZ9OQoC24/exec?equip=" + encodeURIComponent(equipId);
 
-  if (!eq) {
-    showError("Equipment not found: " + equipId);
-    return;
-  }
-
-  render(eq);
+  fetch(url)
+    .then(function(res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    })
+    .then(function(data) {
+      if (data.error) throw new Error(data.error);
+      render(data);
+    })
+    .catch(function(err) {
+      // Fallback to embedded data if fetch fails
+      var eq = null;
+      for (var i = 0; i < EQUIPMENT_DATA.length; i++) {
+        if (EQUIPMENT_DATA[i].id === equipId) { eq = EQUIPMENT_DATA[i]; break; }
+      }
+      if (eq) { render(eq); } else { showError(err.message || String(err)); }
+    });
 
   function getParam(key) {
     return new URLSearchParams(window.location.search).get(key);
